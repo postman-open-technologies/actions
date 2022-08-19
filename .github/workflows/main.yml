@@ -1,0 +1,84 @@
+name: Actions  
+on: [push]
+jobs:
+  deploy_source:
+    name: Deploy API Using Lambda
+    strategy:
+      matrix:
+        node-version: [12.x]
+    runs-on: ubuntu-latest
+    steps:
+    
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: npm install and build
+        run: |
+          npm ci
+          npm run build --if-present
+        env:
+          CI: true
+
+      # Actions
+      - name: /actions get lambda deploy zip
+        uses: postman-open-technologies/actions@main
+        with:
+            args: zip -qq -r m-s-action-g.zip actions/get/index.js node_modules
+      - name: actions get lambda deploy
+        uses: appleboy/lambda-action@master
+        with:
+            aws_access_key_id:${{secrets.AWS_ACCESS_KEY_ID}}
+            aws_secret_access_key:${{secrets.AWS_SECRET_ACCESS_KEY}}
+            aws_region: us-west-1
+            function_name: m-s-action-g
+            zip_file: m-s-action-g.zip
+      - name: /actions post lambda deploy zip
+        uses: postman-open-technologies/actions@main
+        with:
+            args: zip -qq -r m-s-action-po.zip actions/post/index.js node_modules
+      - name: actions get lambda deploy
+        uses: appleboy/lambda-action@master
+        with:
+            aws_access_key_id:${{secrets.AWS_ACCESS_KEY_ID}}
+            aws_secret_access_key:${{secrets.AWS_SECRET_ACCESS_KEY}}
+            aws_region: us-west-1
+            function_name: m-s-action-po
+            zip_file: m-s-action-po.zip
+      - name: /actions/{action_id} get lambda deploy zip
+        uses: postman-open-technologies/actions@main
+        with:
+            args: zip -qq -r m-s-actions-action-g.zip actions/action_id/get/index.js node_modules
+      - name: actions get lambda deploy
+        uses: appleboy/lambda-action@master
+        with:
+            aws_access_key_id:${{secrets.AWS_ACCESS_KEY_ID}}
+            aws_secret_access_key:${{secrets.AWS_SECRET_ACCESS_KEY}}
+            aws_region: us-west-1
+            function_name: m-s-actions-action-g
+            zip_file: m-s-actions-action-g.zip
+      - name: /actions/{action_id} put lambda deploy zip
+        uses: postman-open-technologies/actions@main
+        with:
+            args: zip -qq -r m-s-actions-action-pu.zip actions/action_id/put/index.js node_modules
+      - name: actions get lambda deploy
+        uses: appleboy/lambda-action@master
+        with:
+            aws_access_key_id:${{secrets.AWS_ACCESS_KEY_ID}}
+            aws_secret_access_key:${{secrets.AWS_SECRET_ACCESS_KEY}}
+            aws_region: us-west-1
+            function_name: m-s-actions-action-pu
+            zip_file: m-s-actions-action-pu.zip
+      - name: /actions/{action_id} delete lambda deploy zip
+        uses: postman-open-technologies/actions@main
+        with:
+            args: zip -qq -r m-s-actions-action-d.zip actions/action_id/delete/index.js node_modules
+      - name: actions get lambda deploy
+        uses: appleboy/lambda-action@master
+        with:
+            aws_access_key_id:${{secrets.AWS_ACCESS_KEY_ID}}
+            aws_secret_access_key:${{secrets.AWS_SECRET_ACCESS_KEY}}
+            aws_region: us-west-1
+            function_name: m-s-actions-action-d
+            zip_file: m-s-actions-action-d.zip        
